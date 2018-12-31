@@ -93,7 +93,7 @@ To carry out the rule on an expr e.
 * Check that 1 matches e.
 * Associate the subexpr e.l and e.r with a and b.
 * Construct 2
-* Replace b with e.r and a with e.l.
+* Replace b with a copy of e.r and a with a coply of e.l.
 
 //Defines the relationship between 1 and 2
 func relate(1 expr, 2 expr) r rule
@@ -101,7 +101,7 @@ func relate(1 expr, 2 expr) r rule
 //Checks that the rule can be applied to e. i.e. 1 and e match
 func fits(e expr, r rule) bool
 
-//Out puts an expr with the form of 2 but with e.l, e.r inplace of a, b.
+//Outputs an expr with the form of 2 but with e.l, e.r inplace of a, b.
 func apply(r rule, e expr) f expr
 
 
