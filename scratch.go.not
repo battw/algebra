@@ -1,0 +1,12 @@
+package main
+
+import "fmt"
+
+func chopper(s string) {
+}
+
+func main() {
+	for _, c := range "happy" {
+		fmt.Printf("%c\n", c)
+	}
+}
