@@ -9,7 +9,7 @@ func Translate(s string) *Expr {
 
 //item is a lexical symbol
 type item struct {
-	//TODO can I define sensible types for these i.e. not strings
+	//TODO define sensible types for these i.e. not strings
 	typ string
 	sym rune
 }
@@ -30,6 +30,7 @@ func readop(rch <-chan rune) item {
 	case '+':
 		return item{OPTYPE, '+'}
 	default:
+        //TODO catch this, or something
 		panic("Operation is invalid")
 	}
 }

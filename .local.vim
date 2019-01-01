@@ -1,5 +1,6 @@
 edit alg.go
 edit expr/expr.go
+edit expr/translater.go
 " edit scratch.go
 edit ./docs/design.txt
 edit .local.vim
