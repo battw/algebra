@@ -2,7 +2,7 @@ package expr
 
 //translate, converts strings into expression trees
 func Translate(s string) *Expr {
-	runech := strstream(s)
+	runech := Strstream(s)
 	itemch := lex(runech)
 	return parse(itemch)
 }
@@ -14,7 +14,8 @@ type item struct {
 	sym rune
 }
 
-func strstream(s string) <-chan rune {
+//TODO refactor this into a utility package as it is useful
+func Strstream(s string) <-chan rune {
 	rch := make(chan rune)
 	go func() {
 		for _, c := range s {
