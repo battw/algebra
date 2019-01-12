@@ -24,23 +24,23 @@ func (tt Toktyp) String() string {
 	case ERR:
 		return "ERR"
 	case EXPR:
-		return "EXPR"
+		return "EXPR" //starts with a (
 	case INT:
 		return "INT"
 	case NAME:
-		return "NAME"
+		return "NAME" //starts with a letter
 	default:
 		return "INVALID TYPE"
 	}
 }
 
 type Tokn struct {
-	typ Toktyp
-	str string
+	Typ Toktyp
+	Str string
 }
 
 func (tok Tokn) String() string {
-	return fmt.Sprintf("Tokn{%s, %s}", tok.typ, tok.str)
+	return fmt.Sprintf("Tokn{%s, %s}", tok.Typ, tok.Str)
 }
 
 //tokenise, returns a channel providing tokens as strings.
@@ -51,7 +51,7 @@ func Tokenise(rch <-chan rune) <-chan Tokn {
 		for {
 			tokstr := readtokstr(rch)
 			tok := str2Tokn(tokstr)
-			if tok.typ == NIL {
+			if tok.Typ == NIL {
 				break
 			}
 			tokch <- tok
@@ -125,18 +125,18 @@ func readtokstr(rch <-chan rune) string {
 
 func str2Tokn(str string) Tokn {
 	var tok Tokn
-	tok.str = str
+	tok.Str = str
 	if len(str) == 0 {
-		tok.typ = NIL
+		tok.Typ = NIL
 	} else if isInt(str) {
-		tok.typ = INT
+		tok.Typ = INT
 	} else if isName(str) {
-		tok.typ = NAME
+		tok.Typ = NAME
 	} else if isExpr(str) {
-		tok.typ = EXPR
+		tok.Typ = EXPR
 	} else {
-		tok.typ = ERR
-		tok.str = "Token string '" + str + "' isn't a NAME, INT or EXPR"
+		tok.Typ = ERR
+		tok.Str = "Token string '" + str + "' isn't a NAME, INT or EXPR"
 	}
 	return tok
 }
