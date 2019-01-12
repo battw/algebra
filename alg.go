@@ -108,7 +108,7 @@ func printexp(tokch <-chan toknify.Tokn, env *environ) string {
 	if exp == nil {
 		return "There is no expression named " + tok.Str
 	}
-	return tok.Str + ": " + exp.String()
+	return exp.String()
 }
 
 func printvars(tokch <-chan toknify.Tokn, env *environ) string {
