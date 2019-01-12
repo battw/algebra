@@ -1,4 +1,5 @@
 edit alg.go
+edit toknify/toknify.go
 edit expr/expr.go
 edit expr/translater.go
 edit $GOPATH/src/scratch/scratch.go
