@@ -10,7 +10,7 @@ func Translate(s string) *Expr {
 //item is a lexical symbol
 type item struct {
 	//TODO define sensible types for these i.e. not strings
-	typ string
+	typ nodetype
 	sym rune
 }
 
@@ -29,15 +29,15 @@ func Strstream(s string) <-chan rune {
 func readop(rch <-chan rune) item {
 	switch <-rch {
 	case '+':
-		return item{OPTYPE, '+'}
+		return item{OP, '+'}
 	default:
-        //TODO catch this, or something
+		//TODO catch this, or something. Need decent error messages.
 		panic("Operation is invalid")
 	}
 }
 
 func readvar(r rune) item {
-	return item{"VAR", r}
+	return item{VAR, r}
 }
 
 func lex(rch <-chan rune) <-chan item {
@@ -60,13 +60,11 @@ func lex(rch <-chan rune) <-chan item {
 func parse(sch <-chan item) *Expr {
 	for s := range sch {
 		switch s.typ {
-		case OPTYPE:
-			return &Expr{OPTYPE, s.sym, parse(sch), parse(sch)}
-		case VARTYPE:
-			return &Expr{VARTYPE, s.sym, nil, nil}
+		case OP:
+			return &Expr{OP, s.sym, parse(sch), parse(sch)}
+		case VAR:
+			return &Expr{VAR, s.sym, nil, nil}
 		}
 	}
 	return &Expr{}
 }
-
-

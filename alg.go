@@ -3,12 +3,68 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
-	"strings"
-	"unicode"
-	//    "strconv"
 	"github.com/llo-oll/algebra/expr"
+	"os"
+	"strconv"
+	//	"strings"
+	"unicode"
 )
+
+type toktyp int
+
+const (
+	NIL toktyp = iota
+	ERR
+	EXPR
+	INT
+	NAME
+)
+
+func (tt toktyp) String() string {
+	switch tt {
+	case NIL:
+		return "NIL"
+	case ERR:
+		return "ERR"
+	case EXPR:
+		return "EXPR"
+	case INT:
+		return "INT"
+	case NAME:
+		return "NAME"
+	default:
+		return "INVALID TYPE"
+	}
+}
+
+type tokn struct {
+	typ toktyp
+	str string
+}
+
+func (tok tokn) String() string {
+	return fmt.Sprintf("tokn{%s, %s}", tok.typ, tok.str)
+}
+
+func isInt(s string) bool {
+	_, err := strconv.Atoi(s)
+	return err == nil
+}
+
+func isName(s string) bool {
+	isname := unicode.IsLetter(rune(s[0]))
+	for _, r := range s {
+		if unicode.IsSpace(r) {
+			isname = false
+			break
+		}
+	}
+	return isname
+}
+
+func isExpr(s string) bool {
+	return len(s) > 0 && s[0] == '('
+}
 
 func repl(engin chan<- string, engout <-chan string) {
 	bio := bufio.NewReader(os.Stdin)
@@ -35,20 +91,8 @@ func eng() (chan<- string, <-chan string) {
 	return engin, engout
 }
 
-//readtok returns, as a string, the stream of runes up until the next unicode
-//whitespace rune. The whitespace is discarded.
-func readword(rch <-chan rune) string {
-	var sb strings.Builder
-	for r := range rch {
-		if unicode.IsSpace(r) {
-			break
-		}
-		sb.WriteRune(r)
-	}
-	return sb.String()
-}
-
-func readtok(rch <-chan rune) string {
+//readtok returns the next token.
+func readtokstr(rch <-chan rune) string {
 	//ignore any initial whitespace
 	var r rune
 	for r = range rch {
@@ -56,11 +100,11 @@ func readtok(rch <-chan rune) string {
 			break
 		}
 	}
-	tok := ""
 
+	var tokstr string
 	//if starts with a ( then extract the expression string
 	if r == '(' {
-		tok += string(r)
+		tokstr += string(r)
 		scope := 1
 		for r := range rch {
 			switch r {
@@ -69,32 +113,54 @@ func readtok(rch <-chan rune) string {
 			case ')':
 				scope--
 			}
-			tok += string(r)
+			tokstr += string(r)
 			if scope == 0 {
 				break
 			}
 		}
-	} else if unicode.IsLetter(r) || unicode.IsNumber(r) {
-		tok += string(r)
+		//These are non-token strings
+	} else if r == '\000' || unicode.IsSpace(r) {
+		tokstr = ""
+	} else {
+		tokstr += string(r)
 		for r = range rch {
 			if unicode.IsSpace(r) {
 				break
 			}
-			tok += string(r)
+			tokstr += string(r)
 		}
 	}
 
+	return tokstr
+}
+
+func str2tokn(str string) tokn {
+	var tok tokn
+	tok.str = str
+	if len(str) == 0 {
+		tok.typ = NIL
+	} else if isInt(str) {
+		tok.typ = INT
+	} else if isName(str) {
+		tok.typ = NAME
+	} else if isExpr(str) {
+		tok.typ = EXPR
+	} else {
+		tok.typ = ERR
+		tok.str = "Token string '" + str + "' isn't a NAME, INT or EXPR"
+	}
 	return tok
 }
 
 //tokenise, returns a channel providing tokens as strings.
 //A token is either a space separated command/argument or an expr.
-func tokenise(rch <-chan rune) <-chan string {
-	tokch := make(chan string)
+func tokenise(rch <-chan rune) <-chan tokn {
+	tokch := make(chan tokn)
 	go func() {
 		for {
-			tok := readtok(rch)
-			if tok == "" {
+			tokstr := readtokstr(rch)
+			tok := str2tokn(tokstr)
+			if tok.typ == NIL {
 				break
 			}
 			tokch <- tok
