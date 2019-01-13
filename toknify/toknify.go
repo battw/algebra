@@ -119,7 +119,6 @@ func readtokstr(rch <-chan rune) string {
 			tokstr += string(r)
 		}
 	}
-
 	return tokstr
 }
 

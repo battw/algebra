@@ -3,9 +3,23 @@ package expr
 type nodetype int
 
 const (
-	OP nodetype = iota
+	ERR nodetype = iota
+	OP
 	VAR
 )
+
+func (nt nodetype) String() string {
+	switch nt {
+	case ERR:
+		return "ERR"
+	case OP:
+		return "OP"
+	case VAR:
+		return "VAR"
+	default:
+		return "INVALID"
+	}
+}
 
 //Expr is an algebraic expression
 type Expr struct {
@@ -23,7 +37,7 @@ func (exp Expr) String() string {
 	case VAR:
 		return string(exp.sym)
 	default:
-		panic("Node of unrecognised type: " + string(exp.typ))
+		return "ERR: " + string(exp.sym)
 	}
 }
 
@@ -50,6 +64,7 @@ func (exp Expr) subrec(i int) (*Expr, int) {
 
 }
 
+//TODO return an error rather than badly formed tree
 func (exp Expr) clone() *Expr {
 	switch exp.typ {
 	case VAR:
@@ -57,6 +72,6 @@ func (exp Expr) clone() *Expr {
 	case OP:
 		return &Expr{exp.typ, exp.sym, exp.l.clone(), exp.r.clone()}
 	default:
-		panic("Node of unrecognised type: " + string(exp.typ))
+		return &Expr{ERR, 949, nil, nil}
 	}
 }

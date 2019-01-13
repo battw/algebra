@@ -1,10 +1,22 @@
 package expr
 
+import (
+	"errors"
+	"github.com/llo-oll/algebra/util"
+	"strconv"
+	"unicode"
+)
+
+//TODO Include the brackets as lexical items for better error messages/detection
+//Currently, user input can be parsed when it is malformed, meaning that
+//an expression is created which might be something other than intended.
+
 //translate, converts strings into expression trees
-func Translate(s string) *Expr {
-	runech := Strstream(s)
-	itemch := lex(runech)
-	return parse(itemch)
+func Translate(s string) (*Expr, error) {
+	runech := util.Runechan(s)
+	itemch, err := lex(runech)
+	exp, err := parse(itemch)
+	return exp, err
 }
 
 //item is a lexical symbol
@@ -14,57 +26,66 @@ type item struct {
 	sym rune
 }
 
-//TODO refactor this into a utility package as it is useful
-func Strstream(s string) <-chan rune {
-	rch := make(chan rune)
-	go func() {
-		for _, c := range s {
-			rch <- c
-		}
-		close(rch)
-	}()
-	return rch
-}
-
 func readop(rch <-chan rune) item {
-	switch <-rch {
-	case '+':
-		return item{OP, '+'}
-	default:
-		//TODO catch this, or something. Need decent error messages.
-		panic("Operation is invalid")
+	sym := <-rch
+	if unicode.IsSymbol(sym) {
+		return item{OP, sym}
 	}
+	return item{} //, errors.New(string(sym) + " is not an operator")
 }
 
 func readvar(r rune) item {
 	return item{VAR, r}
 }
 
-func lex(rch <-chan rune) <-chan item {
-	sch := make(chan item)
+func lex(rch <-chan rune) (<-chan item, error) {
+	ich := make(chan item)
 	go func() {
 		for r := range rch {
 			switch r {
 			case ' ', '\n', '\t', ')':
 			case '(':
-				sch <- readop(rch)
+				item := readop(rch)
+				ich <- item
 			default:
-				sch <- readvar(r)
+				ich <- readvar(r)
 			}
 		}
-		close(sch)
+		close(ich)
 	}()
-	return sch
+	return ich, nil
 }
 
-func parse(sch <-chan item) *Expr {
-	for s := range sch {
-		switch s.typ {
-		case OP:
-			return &Expr{OP, s.sym, parse(sch), parse(sch)}
-		case VAR:
-			return &Expr{VAR, s.sym, nil, nil}
+func parse(ich <-chan item) (*Expr, error) {
+	exp, err, size := prec(ich, 0)
+	if err == nil {
+		item := <-ich
+		if item.typ != ERR {
+			err = errors.New("Malformed expression: extraneous input '" +
+				string(item.sym) + "' at sub " + strconv.Itoa(size+1))
 		}
 	}
-	return &Expr{}
+	return exp, err
+}
+func prec(ich <-chan item, subi int) (*Expr, error, int) {
+	i := <-ich
+	switch i.typ {
+	case OP:
+		l, errl, subi := prec(ich, subi+1)
+		if errl != nil {
+			return l, errl, subi
+		}
+		r, errr, subi := prec(ich, subi+1)
+		if errr != nil {
+			return r, errr, subi
+		}
+		return &Expr{OP, i.sym, l, r}, nil, subi
+	case VAR:
+		return &Expr{VAR, i.sym, nil, nil}, nil, subi
+	default:
+		return &Expr{ERR, 949, nil, nil},
+			errors.New("Malformed expression: Parse failed at sub expr " +
+				strconv.Itoa(subi)),
+			subi
+	}
 }

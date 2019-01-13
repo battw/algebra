@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/llo-oll/algebra/expr"
 	"github.com/llo-oll/algebra/toknify"
+	"github.com/llo-oll/algebra/util"
 	"os"
 	"strconv"
 )
@@ -53,7 +54,7 @@ func eng() (chan<- string, <-chan string) {
 }
 
 func handle(input string, env *environ) string {
-	runech := expr.Strstream(input)
+	runech := util.Runechan(input)
 	tokch := toknify.Tokenise(runech)
 	cmdtok := <-tokch
 	switch cmdtok.Str {
@@ -93,7 +94,10 @@ func exprdef(tokch <-chan toknify.Tokn, env *environ) string {
 		return typeerr(tok2, toknify.EXPR)
 	}
 	//parse the expression
-	exp := expr.Translate(tok2.Str)
+	exp, err := expr.Translate(tok2.Str)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
 	//add to the environment
 	env.expmap[tok1.Str] = exp
 	return env.expmap[tok1.Str].String()
