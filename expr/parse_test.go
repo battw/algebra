@@ -12,7 +12,10 @@ func TestSimpleParse(t *testing.T) {
 	}
 
 	for i, s := range exprs {
-		exp, _ := Translate(s)
+		exp, err := Translate(s)
+		if err != nil {
+			t.Fatalf("%s for input %s", err, s)
+		}
 		if exp.String() != exprs[i] {
 			t.Fatalf("Output %s does not match input %s", exp.String(),
 				exprs[i])
@@ -26,12 +29,13 @@ func TestParseFail(t *testing.T) {
 		"(+ a b)($ c d)",
 		"(+ a)",
 		"(; r",
+		"(1 a b)",
 	}
 
 	for i, s := range exprs {
 		_, err := Translate(s)
 		if err == nil {
-			t.Fatalf("Input %s should throw an error", exprs[i])
+			t.Fatalf("Input %s should return an error", exprs[i])
 		}
 	}
 }
