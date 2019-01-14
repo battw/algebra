@@ -80,16 +80,22 @@ func handle(input string, env *environ) string {
 }
 
 func typeerr(tok toknify.Tokn, should toknify.Toktyp) string {
-	return tok.Str + " is of type " + tok.Typ.String() +
-		", should be of type " + should.String()
+	errmsg := ""
+	if tok.Typ == toknify.NIL {
+		errmsg += "Missing argument should be of type " + should.String()
+	} else {
+		errmsg += tok.Str + " is of type " + tok.Typ.String() +
+			", should be of type " + should.String()
+	}
+	return errmsg
 }
 
 func exprdef(tokch <-chan toknify.Tokn, env *environ) string {
 	tok1 := <-tokch
-	tok2 := <-tokch
 	if tok1.Typ != toknify.NAME {
 		return typeerr(tok1, toknify.NAME)
 	}
+	tok2 := <-tokch
 	if tok2.Typ != toknify.EXPR {
 		return typeerr(tok2, toknify.EXPR)
 	}
@@ -145,9 +151,33 @@ func subexpr(tokch <-chan toknify.Tokn, env *environ) string {
 		return "There is no expression named " + tok1.Str
 	}
 	subi, _ := strconv.Atoi(tok2.Str)
-	return exp.Sub(subi).String()
+	return exp.Subexp(subi - 1).String() // -1 so counting from 1 up rather than 0
 }
 
 func substitute(tokch <-chan toknify.Tokn, env *environ) string {
-	return "SUBSTITUTE"
+	//TODO These if statement are repeated in all these functions.
+	//Pull them out into a func untokn(toklist, desiredtoktyplist) (unlist, err)
+	tok1 := <-tokch
+	if tok1.Typ != toknify.NAME {
+		return typeerr(tok1, toknify.NAME)
+	}
+	tok2 := <-tokch
+	if tok2.Typ != toknify.INT {
+		return typeerr(tok2, toknify.INT)
+	}
+	tok3 := <-tokch
+	if tok3.Typ != toknify.NAME {
+		return typeerr(tok3, toknify.NAME)
+	}
+	exp := env.expmap[tok1.Str]
+	if exp == nil {
+		return "There is no expression named " + tok1.Str
+	}
+	subi, _ := strconv.Atoi(tok2.Str)
+	subexp := env.expmap[tok3.Str]
+	if exp == nil {
+		return "There is no expression named " + tok1.Str
+	}
+
+	return exp.Substitute(subi, subexp).String()
 }

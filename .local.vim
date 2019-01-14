@@ -3,6 +3,7 @@ edit alg.go
 edit expr/expr.go
 edit expr/translater.go
 edit util/util.go
+edit expr/expr_test.go
 edit expr/parse_test.go
 edit $GOPATH/src/scratch/scratch.go
 edit ./docs/design.txt

@@ -42,15 +42,17 @@ func (exp Expr) String() string {
 }
 
 //Sub returns a clone of the indexed subexpression. The expressions are indexed
-//in preorder
-func (exp Expr) Sub(i int) *Expr {
+//in preorder starting at 0
+func (exp Expr) Subexp(i int) *Expr {
 	sub, _ := exp.subrec(i)
-	return sub
+	return sub.clone()
 }
 
-func (exp Expr) subrec(i int) (*Expr, int) {
+//TODO This needs to handle errors (index out of bounds)
+//WARNING any changes to the returned sub tree will affect the input tree.
+func (exp *Expr) subrec(i int) (*Expr, int) {
 	if i == 0 {
-		return exp.clone(), -1
+		return exp, -1
 	}
 
 	if exp.typ == VAR {
@@ -65,7 +67,7 @@ func (exp Expr) subrec(i int) (*Expr, int) {
 }
 
 //TODO return an error rather than badly formed tree
-func (exp Expr) clone() *Expr {
+func (exp *Expr) clone() *Expr {
 	switch exp.typ {
 	case VAR:
 		return &Expr{exp.typ, exp.sym, nil, nil}
@@ -74,4 +76,16 @@ func (exp Expr) clone() *Expr {
 	default:
 		return &Expr{ERR, 949, nil, nil}
 	}
+}
+
+//Substitute returns a new expression where the sub expression at index 'subi'
+//is replaced with 'subexp'.
+func (exp *Expr) Substitute(subi int, substitute *Expr) *Expr {
+	exp = exp.clone()
+	old, _ := exp.subrec(subi)
+	old.typ = substitute.typ
+	old.sym = substitute.sym
+	old.l = substitute.l
+	old.r = substitute.r
+	return exp
 }
