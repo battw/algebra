@@ -58,6 +58,8 @@ func handle(input string, env *environ) string {
 	tokch := toknify.Tokenise(runech)
 	cmdtok := <-tokch
 	switch cmdtok.Str {
+	case "d", "dummy":
+		return dummy()
 	case "e", "expr":
 		return exprdef(tokch, env)
 	case "p", "print":
@@ -79,6 +81,7 @@ func handle(input string, env *environ) string {
 	}
 }
 
+
 func typeerr(tok toknify.Tokn, should toknify.Toktyp) string {
 	errmsg := ""
 	if tok.Typ == toknify.NIL {
@@ -88,6 +91,36 @@ func typeerr(tok toknify.Tokn, should toknify.Toktyp) string {
 			", should be of type " + should.String()
 	}
 	return errmsg
+}
+
+//TODO move this to tests.
+func dummy(tokch <-chan toknify.Tokn) string {
+	num := toknify.INT
+	name := toknify.NAME
+	exp := toknify.EXPR
+	// nul := toknify.NIL
+	// err := toknify.ERR
+	sig0 := []toknify.Toktyp{name, name, exp}
+	sig1 := []toknify.Toktyp{name, num, name, exp}
+	sig2 := []toknify.Toktyp{name}
+	sigs := [][]toknify.Toktyp{sig0, sig1, sig2}
+
+	tokch := util.Runechan("barry harry (+ a b)")
+	toks, sigi, err := paramcheck(sigs, tokch)
+	return "DUM"
+}
+
+//paramcheck takes lists of correct token types, and checks them against those coming out of the
+//channel. If they are correct, it returns a list containing them, an int giving the index of the
+//matched param list.
+func paramcheck(
+	desired [][]toknify.Toktyp, tokch <-chan toknify.Tokn) ([]toknify.Tokn, int, error) {
+	
+	for tok := range tokch {
+		fmt.Printf("%v\n", tok)
+	}
+
+	return nil, 0, nil
 }
 
 func exprdef(tokch <-chan toknify.Tokn, env *environ) string {

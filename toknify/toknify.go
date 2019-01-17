@@ -12,23 +12,23 @@ type Toktyp int
 const (
 	NIL Toktyp = iota
 	ERR
-	EXPR
+	EXPR //starts with a (
 	INT
-	NAME
+	NAME //starts with a letter
 )
 
 func (tt Toktyp) String() string {
 	switch tt {
 	case NIL:
-		return "NIL"
+		return "NIL "
 	case ERR:
-		return "ERR"
+		return "ERR "
 	case EXPR:
-		return "EXPR" //starts with a (
+		return "EXPR"
 	case INT:
-		return "INT"
+		return "INT "
 	case NAME:
-		return "NAME" //starts with a letter
+		return "NAME"
 	default:
 		return "INVALID TYPE"
 	}
@@ -60,6 +60,7 @@ func Tokenise(rch <-chan rune) <-chan Tokn {
 	}()
 	return tokch
 }
+
 func isInt(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil

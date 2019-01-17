@@ -1,0 +1,30 @@
+package main
+
+import (
+	"testing"
+	"github.com/llo-oll/algebra/toknify"
+	"github.com/llo-oll/algebra/util"
+
+)
+
+func TestParams(t *testing.T) {
+	
+}
+
+func Test_paramcheck(t *testing.T) {
+	num := toknify.INT
+	name := toknify.NAME
+	exp := toknify.EXPR
+	// nul := toknify.NIL
+	// err := toknify.ERR
+	sig0 := []toknify.Toktyp{name, name, exp}
+	sig1 := []toknify.Toktyp{name, num, name, exp}
+	sig2 := []toknify.Toktyp{name}
+	sigs := [][]toknify.Toktyp{sig0, sig1, sig2}
+
+	tokch := util.Runechan("barry harry (+ a b)")
+	toks, sigi, err := paramcheck(sigs, tokch)
+	if toks == nil && sigi == 0 && tok == nil {
+		t.Fatal("TESTRRR")
+	}
+}
