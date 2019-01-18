@@ -12,7 +12,6 @@ func Test_paramcheck(t *testing.T) {
 	exp := toknify.EXPR
 	// nul := toknify.NIL
 	// err := toknify.ERR
-
 	sig0 := []toknify.Toktyp{name, num, name, exp}
 	sig1 := []toknify.Toktyp{name, name, exp}
 	sig2 := []toknify.Toktyp{name}
@@ -20,7 +19,9 @@ func Test_paramcheck(t *testing.T) {
 
 	//Returns the correct things for a simple, positive case
 	tokch := toknify.Tokenise(util.Runechan("barry harry (+ a b)"))
+
 	toks, sigi, err := paramcheck(sigs, tokch)
+
 	if len(toks) != 3 {
 		t.Errorf("Returned the wrong number of tokens, should be 3, was %v\n",
 			len(toks))
@@ -78,6 +79,7 @@ func Test_subexpr(t *testing.T) {
 	env := newenviron()
 	exprdef(tokch0, env)
 	tokch1 := toknify.Tokenise(util.Runechan(varstr + " " + subi))
+
 	outstr := subexpr(tokch1, env)
 	if outstr != substr {
 		t.Errorf("The return string %s doesn't match the correct substring %s",
@@ -99,9 +101,156 @@ func Test_substitute(t *testing.T) {
 	tokch1 := toknify.Tokenise(util.Runechan(subvar + " " + substr))
 	exprdef(tokch1, env)
 	tokch2 := toknify.Tokenise(util.Runechan(expvar + " " + subi + " " + subvar))
+
 	outstr := substitute(tokch2, env)
 	if outstr != reqstr {
 		t.Errorf("The return string %s doesn't match required string %s",
 			outstr, reqstr)
+	}
+}
+
+func helper_defexps(defstrs []string, env *environ) {
+	for _, str := range defstrs {
+		tokch := toknify.Tokenise(util.Runechan(str))
+		exprdef(tokch, env)
+	}
+}
+
+//commuterule adds a commute rule (* a b) -> (* b a) to the environment.
+//desired and actual string outputs plus the rule name.
+func helper_commuterule(env *environ) (string, string, string) {
+	rname := "commute"
+	antevar := "anekdi"
+	anteexp := "(* a b)"
+	postvar := "pnfken"
+	postexp := "(* b a)"
+	helper_defexps([]string{antevar + " " + anteexp, postvar + " " + postexp}, env)
+	rtokch := toknify.Tokenise(util.Runechan(rname + " " + antevar + " " + postvar))
+	outstr := ruledef(rtokch, env)
+	return anteexp + " -> " + postexp, outstr, rname
+}
+
+func helper_distribrule(env *environ) (string, string, string) {
+	rname := "distrb"
+	antevar := "kjniso"
+	anteexp := "(* a (+ b c))"
+	postvar := "dnkoek"
+	postexp := "(+ (* a b) (* c d))"
+	helper_defexps([]string{antevar + " " + anteexp, postvar + " " + postexp}, env)
+	rtokch := toknify.Tokenise(util.Runechan(rname + " " + antevar + " " + postvar))
+	outstr := ruledef(rtokch, env)
+	return anteexp + " -> " + postexp, outstr, rname
+}
+
+func helper_undistribrule(env *environ) (string, string, string) {
+	rname := "undistrb"
+	antevar := "nedidi"
+	anteexp := "(* a (+ b c))"
+	postvar := "polesk"
+	postexp := "(+ (* a b) (* c d))"
+	helper_defexps([]string{antevar + " " + anteexp, postvar + " " + postexp}, env)
+	rtokch := toknify.Tokenise(util.Runechan(rname + " " + antevar + " " + postvar))
+	outstr := ruledef(rtokch, env)
+	return anteexp + " -> " + postexp, outstr, rname
+
+}
+
+func Test_ruledef(t *testing.T) {
+	env := newenviron()
+	desiredstr, actualstr, _ := helper_commuterule(env)
+	if desiredstr != actualstr {
+		t.Errorf("The rule string\n%s\n"+
+			"doesn't match the desired commute rule string\n%s\n",
+			actualstr, desiredstr)
+	}
+
+	env = newenviron()
+	desiredstr, actualstr, _ = helper_distribrule(env)
+	if desiredstr != actualstr {
+		t.Errorf("The rule string\n%s\n"+
+			"doesn't match the desired distribute rule string\n%s\n",
+			actualstr, desiredstr)
+	}
+
+	env = newenviron()
+	desiredstr, actualstr, _ = helper_undistribrule(env)
+	if desiredstr != actualstr {
+		t.Errorf("The rule string\n%s\n"+
+			"doesn't match the desired undistribute rule string\n%s\n",
+			actualstr, desiredstr)
+	}
+
+}
+
+func helper_applyrule(rname string, ename string, i string, env *environ) string {
+	tokch := toknify.Tokenise(util.Runechan(rname + " " + ename + " " + i))
+	return applyrule(tokch, env)
+}
+
+func Test_applyrule(t *testing.T) {
+	//Get error from rule which doesn't match the specified sub expression
+	env := newenviron()
+	_, _, rname := helper_commuterule(env)
+	ename := "ex"
+	exp := "(* (* (* a b) c) (* e f))"
+	i := "2"
+	helper_defexps([]string{ename + " " + exp}, env)
+	result := helper_applyrule(rname, ename, i, env)
+	if len(result) < 50 {
+		t.Errorf("Rule application should return an error string " +
+			"as the rule isn't applicable")
+	}
+
+	//Apply a rule at root of expression
+	env = newenviron()
+	_, _, rname = helper_commuterule(env)
+	ename = "ex"
+	exp = "(* (* a b) (* c d))"
+	i = "1"
+	desired := "(* (* c d) (* a b))"
+	helper_defexps([]string{ename + " " + exp}, env)
+	result = helper_applyrule(rname, ename, i, env)
+	if desired != result {
+		t.Errorf("The result of apply commutative rule at %v is\n%s\n"+
+			"It should be \n%s\n", i, result, desired)
+	}
+	//Apply rule deeper than at root
+	env = newenviron()
+	_, _, rname = helper_commuterule(env)
+	ename = "ex"
+	exp = "(* (* (* a b) c) (* e f))"
+	i = "2"
+	desired = "(* (* c (* a b)) (* e f))"
+	helper_defexps([]string{ename + " " + exp}, env)
+	result = helper_applyrule(rname, ename, i, env)
+	if desired != result {
+		t.Errorf("The result of apply commutative rule at %v is\n%s\n"+
+			"It should be \n%s\n", i, result, desired)
+	}
+	//Apply rule where one var in the lhs appears twice in the rhs
+	env = newenviron()
+	_, _, rname = helper_distribrule(env)
+	ename = "ex"
+	exp = "(* a (+ (+ c d) e))"
+	i = "1"
+	desired = "(+ (* a (+ c d)) (* a e))"
+	helper_defexps([]string{ename + " " + exp}, env)
+	result = helper_applyrule(rname, ename, i, env)
+	if desired != result {
+		t.Errorf("The result of apply distributive rule at %v is\n%s\n"+
+			"It should be \n%s\n", i, result, desired)
+	}
+	//Apply rule where two equal sub exps on the left appear once on the right
+	env = newenviron()
+	_, _, rname = helper_undistribrule(env)
+	ename = "ex"
+	exp = "(+ (* a (+ c d)) (* a e))"
+	i = "1"
+	desired = "(* a (+ (+ c d) e))"
+	helper_defexps([]string{ename + " " + exp}, env)
+	result = helper_applyrule(rname, ename, i, env)
+	if desired != result {
+		t.Errorf("The result of apply undistributive rule at %v is\n%s\n"+
+			"It should be \n%s\n", i, result, desired)
 	}
 }
