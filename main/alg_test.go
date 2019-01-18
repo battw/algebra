@@ -50,3 +50,58 @@ func Test_paramcheck(t *testing.T) {
 	}
 
 }
+
+func Test_exprdef(t *testing.T) {
+	instr := "(+ (* b c) (- a d))"
+	varstr := "var"
+	tokch := toknify.Tokenise(util.Runechan(varstr + " " + instr))
+	env := newenviron()
+	outstr := exprdef(tokch, env)
+	//Stores correct expression in the map
+	if env.expmap[varstr].String() != instr {
+		t.Errorf("Stored expression %s does not match input expression %s\n",
+			instr, env.expmap[varstr])
+	}
+	//Returns the appropriate string
+	if instr != outstr {
+		t.Errorf("The return string %s doesn't match the input expression %s",
+			outstr, instr)
+	}
+}
+
+func Test_subexpr(t *testing.T) {
+	instr := "(+ (* b c) (- a d))"
+	varstr := "var"
+	subi := "5"
+	substr := "(- a d)"
+	tokch0 := toknify.Tokenise(util.Runechan(varstr + " " + instr))
+	env := newenviron()
+	exprdef(tokch0, env)
+	tokch1 := toknify.Tokenise(util.Runechan(varstr + " " + subi))
+	outstr := subexpr(tokch1, env)
+	if outstr != substr {
+		t.Errorf("The return string %s doesn't match the correct substring %s",
+			outstr, substr)
+	}
+
+}
+
+func Test_substitute(t *testing.T) {
+	expvar := "x"
+	expstr := "(+ (@ t (% q r)) s)"
+	subvar := "y"
+	substr := "(& a b)"
+	subi := "6"
+	reqstr := "(+ (@ t (% q (& a b))) s)"
+	env := newenviron()
+	tokch0 := toknify.Tokenise(util.Runechan(expvar + " " + expstr))
+	exprdef(tokch0, env)
+	tokch1 := toknify.Tokenise(util.Runechan(subvar + " " + substr))
+	exprdef(tokch1, env)
+	tokch2 := toknify.Tokenise(util.Runechan(expvar + " " + subi + " " + subvar))
+	outstr := substitute(tokch2, env)
+	if outstr != reqstr {
+		t.Errorf("The return string %s doesn't match required string %s",
+			outstr, reqstr)
+	}
+}

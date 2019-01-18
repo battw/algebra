@@ -156,7 +156,7 @@ func exprdef(tokch <-chan toknify.Tokn, env *environ) string {
 	}
 	//add to the environment
 	env.expmap[toks[0].Str] = exp
-	return env.expmap[toks[0].Str].String()
+	return exp.String()
 }
 
 func printexp(tokch <-chan toknify.Tokn, env *environ) string {
@@ -187,7 +187,6 @@ func ruledef(tokch <-chan toknify.Tokn, env *environ) string {
 func applyrule(tokch <-chan toknify.Tokn, env *environ) string {
 	return "APPLY"
 }
-
 func subexpr(tokch <-chan toknify.Tokn, env *environ) string {
 	desired := [][]toknify.Toktyp{{toknify.NAME, toknify.INT}}
 	toks, _, err := paramcheck(desired, tokch)
@@ -217,5 +216,5 @@ func substitute(tokch <-chan toknify.Tokn, env *environ) string {
 	if subexp == nil {
 		return "There is no expression named " + toks[2].Str
 	}
-	return exp.Substitute(subi, subexp).String()
+	return exp.Substitute(subi-1, subexp).String()
 }
