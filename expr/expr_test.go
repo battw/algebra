@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestSubstitute(t *testing.T) {
+func Test_Substitute(t *testing.T) {
 	str := "(+ a (* c d))"
 	substr := "(+ (%x y) z)"
 	exp, _ := Translate(str)
@@ -20,7 +20,7 @@ func TestSubstitute(t *testing.T) {
 	}
 }
 
-func TestSubexp(t *testing.T) {
+func Test_Subexp(t *testing.T) {
 	str := "(+ ($ (% T Q) R) W)"
 	subi := 2
 	exp, _ := Translate(str)
@@ -38,7 +38,7 @@ func TestSubexp(t *testing.T) {
 	}
 }
 
-func Test_equals(t *testing.T) {
+func Test_Equals(t *testing.T) {
 	exp1, _ := Translate("(& (+ (& a b) (* r (^ x Y))) (+ o (- r G)))")
 	exp2, _ := Translate("(& (+ (& a b) (* r (^ x Y))) (+ o (- r G)))")
 	//Basic equals
@@ -70,7 +70,7 @@ func Test_equals(t *testing.T) {
 		t.Errorf("\n%s\n%s\nAren't equal", exp5, exp6)
 	}
 }
-func Test_match(t *testing.T) {
+func Test_Match(t *testing.T) {
 	sub, _ := Translate("(* (- a b) (* c d))")
 	sup, _ := Translate("(* (- z (^ c d)) (* (+ e f) (+ g h))")
 	if !sub.Match(sup) {
@@ -91,4 +91,5 @@ func Test_match(t *testing.T) {
 	if sub.Match(sup) {
 		t.Errorf("\n%s\n%s\nshouldn't 'Match'", sub, sup)
 	}
+
 }
