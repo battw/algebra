@@ -1,0 +1,9 @@
+package rule
+
+import (
+	"testing"
+)
+
+func Test_apply(t *testing.T) {
+	
+}

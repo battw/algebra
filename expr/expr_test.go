@@ -37,3 +37,58 @@ func TestSubexp(t *testing.T) {
 			sub.String(), desired)
 	}
 }
+
+func Test_equals(t *testing.T) {
+	exp1, _ := Translate("(& (+ (& a b) (* r (^ x Y))) (+ o (- r G)))")
+	exp2, _ := Translate("(& (+ (& a b) (* r (^ x Y))) (+ o (- r G)))")
+	//Basic equals
+	if !exp1.Equals(exp2) {
+		t.Errorf("\n%s\n%s\nshould evaluate as Equal", exp1, exp2)
+	}
+	exp3, _ := Translate("(& (+ (& a b) (* r (^ x Y))) (+ t (- r G)))")
+	//Differ by a variable name
+	if exp1.Equals(exp3) {
+		t.Errorf("\n%s\n%s\nshouldn't evaluate as Equal", exp1, exp3)
+	}
+	exp4, _ := Translate("(& (+ (& a b) (* c d)) (+ e f))")
+	//Differ by structure
+	if exp1.Equals(exp4) {
+		t.Errorf("\n%s\n%s\nshouldn't evaluate as Equal", exp1, exp3)
+	}
+	//Differ by structure, different case
+	if exp4.Equals(exp3) {
+		t.Errorf("\n%s\n%s\nshouldn't evaluate as Equal", exp4, exp3)
+	}
+	exp5, _ := Translate("(* (/ a (+ b c)) (# Q Z))")
+	exp6, _ := Translate("(* (/ a b) (# Q Z))")
+	//Subtrees don't equal supertrees
+	if exp6.Equals(exp5) {
+		t.Errorf("\n%s\n%s\nAren't equal", exp6, exp5)
+	}
+	//Supertrees don't equal subtrees
+	if exp5.Equals(exp6) {
+		t.Errorf("\n%s\n%s\nAren't equal", exp5, exp6)
+	}
+}
+func Test_match(t *testing.T) {
+	sub, _ := Translate("(* (- a b) (* c d))")
+	sup, _ := Translate("(* (- z (^ c d)) (* (+ e f) (+ g h))")
+	if !sub.Match(sup) {
+		t.Errorf("\n%s\n%s\nshould 'Match'", sub, sup)
+	}
+	sub, _ = Translate("(* (- a b) (* c d))")
+	sup, _ = Translate("(* (- z (^ c d)) (- (+ e f) (+ g h))")
+	if sub.Match(sup) {
+		t.Errorf("\n%s\n%s\nshouldn't 'Match'", sub, sup)
+	}
+	sub, _ = Translate("(+ a a)")
+	sup, _ = Translate("(+ (* x y) (* x y))")
+	//Repeated vars left
+	if !sub.Match(sup) {
+		t.Errorf("\n%s\n%s\nshould 'Match'", sub, sup)
+	}
+	sup, _ = Translate("(+ (* x y) (* q y))")
+	if sub.Match(sup) {
+		t.Errorf("\n%s\n%s\nshouldn't 'Match'", sub, sup)
+	}
+}

@@ -181,10 +181,12 @@ func printvars(tokch <-chan toknify.Tokn, env *environ) string {
 }
 
 func ruledef(tokch <-chan toknify.Tokn, env *environ) string {
+	//Check vars(lhs) == vars(rhs)
 	return "RULE"
 }
 
 func applyrule(tokch <-chan toknify.Tokn, env *environ) string {
+	//Check match can be applied on the specified subexpression
 	return "APPLY"
 }
 func subexpr(tokch <-chan toknify.Tokn, env *environ) string {
@@ -201,6 +203,7 @@ func subexpr(tokch <-chan toknify.Tokn, env *environ) string {
 	return exp.Subexp(subi - 1).String() // -1 so counting from 1 up rather than 0
 }
 
+//TODO Index out of bounds error
 func substitute(tokch <-chan toknify.Tokn, env *environ) string {
 	desired := [][]toknify.Toktyp{{toknify.NAME, toknify.INT, toknify.NAME}}
 	toks, _, err := paramcheck(desired, tokch)
