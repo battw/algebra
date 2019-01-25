@@ -70,26 +70,39 @@ func Test_Equals(t *testing.T) {
 		t.Errorf("\n%s\n%s\nAren't equal", exp5, exp6)
 	}
 }
+
 func Test_Match(t *testing.T) {
 	sub, _ := Translate("(* (- a b) (* c d))")
 	sup, _ := Translate("(* (- z (^ c d)) (* (+ e f) (+ g h))")
-	if !sub.Match(sup) {
+	if mch, _ := sub.Match(sup); !mch {
 		t.Errorf("\n%s\n%s\nshould 'Match'", sub, sup)
 	}
 	sub, _ = Translate("(* (- a b) (* c d))")
 	sup, _ = Translate("(* (- z (^ c d)) (- (+ e f) (+ g h))")
-	if sub.Match(sup) {
+	if mch, _ := sub.Match(sup); mch {
 		t.Errorf("\n%s\n%s\nshouldn't 'Match'", sub, sup)
 	}
 	sub, _ = Translate("(+ a a)")
 	sup, _ = Translate("(+ (* x y) (* x y))")
 	//Repeated vars left
-	if !sub.Match(sup) {
+	if mch, _ := sub.Match(sup); !mch {
 		t.Errorf("\n%s\n%s\nshould 'Match'", sub, sup)
 	}
 	sup, _ = Translate("(+ (* x y) (* q y))")
-	if sub.Match(sup) {
+	if mch, _ := sub.Match(sup); mch {
 		t.Errorf("\n%s\n%s\nshouldn't 'Match'", sub, sup)
 	}
 
+}
+
+func Test_Subvar(t *testing.T) {
+	m := make(map[rune]*Expr)
+	m['a'], _ = Translate("(+ a a)")
+	m['b'], _ = Translate("(* (- b b) b)")
+	exp, _ := Translate("(- (* a b) ($ b z))")
+	desired, _ := Translate("(- (* (+ a a) (* (- b b) b)) ($ (* (- b b) b) z))")
+	result := exp.Subvar(m)
+	if !desired.Equals(result) {
+		t.Errorf("\n%s\nShould equal\n%s\n", result, desired)
+	}
 }

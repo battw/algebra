@@ -1,9 +1,5 @@
 package expr
 
-import (
-	"fmt"
-)
-
 type nodetype int
 
 const (
@@ -58,14 +54,15 @@ func (exp *Expr) Equals(other *Expr) bool {
 }
 
 //Match - Checks that 'sub' matches a sub tree of 'sup' with the same root.
-//Returns true if 'sup' can be constructed by replacing each of the variables in 'sub'
-//with some expression. When variables appear more than once in sub, their corresponding
-//subtrees in sup are checked for equivalence.
-func (sub *Expr) Match(sup *Expr) bool {
+//Returns true if 'sup' can be constructed by replacing each of the variables in
+//'sub' with some expression. When variables appear more than once in sub, their
+//corresponding subtrees in sup are checked for equivalence.
+//Also returns a map from the variables in sub to their corresponding
+//subexpressions in sup
+func (sub *Expr) Match(sup *Expr) (bool, map[rune]*Expr) {
 	var2exps := make(map[rune][]*Expr)
 	//Check that 'sub' is a subtree of 'sup'
 	match := sub.matchrec(sup, var2exps)
-	fmt.Println(match)
 	//Check for equality of subtrees in 'sup' which are represented by the same variable in 'sub'
 	for _, exps := range var2exps {
 		if len(exps) > 1 {
@@ -74,7 +71,13 @@ func (sub *Expr) Match(sup *Expr) bool {
 			}
 		}
 	}
-	return match
+	v2e := make(map[rune]*Expr)
+	for k, exps := range var2exps {
+		if len(exps) > 0 {
+			v2e[k] = exps[0]
+		}
+	}
+	return match, v2e
 }
 
 func (sub *Expr) matchrec(sup *Expr, var2exps map[rune][]*Expr) bool {
@@ -98,7 +101,7 @@ func (sub *Expr) matchrec(sup *Expr, var2exps map[rune][]*Expr) bool {
 //in preorder starting at 0
 func (exp Expr) Subexp(i int) *Expr {
 	sub, _ := exp.subrec(i)
-	return sub.clone()
+	return sub.Clone()
 }
 
 //TODO This needs to handle errors (index out of bounds)
@@ -120,12 +123,12 @@ func (exp *Expr) subrec(i int) (*Expr, int) {
 }
 
 //TODO return an error rather than badly formed tree
-func (exp *Expr) clone() *Expr {
+func (exp *Expr) Clone() *Expr {
 	switch exp.typ {
 	case VAR:
 		return &Expr{exp.typ, exp.sym, nil, nil}
 	case OP:
-		return &Expr{exp.typ, exp.sym, exp.l.clone(), exp.r.clone()}
+		return &Expr{exp.typ, exp.sym, exp.l.Clone(), exp.r.Clone()}
 	default:
 		return &Expr{ERR, 949, nil, nil}
 	}
@@ -134,11 +137,33 @@ func (exp *Expr) clone() *Expr {
 //Substitute returns a new expression where the sub expression at index 'subi'
 //is replaced with 'subexp'.
 func (exp *Expr) Substitute(subi int, substitute *Expr) *Expr {
-	exp = exp.clone()
+	exp = exp.Clone()
 	old, _ := exp.subrec(subi)
 	old.typ = substitute.typ
 	old.sym = substitute.sym
 	old.l = substitute.l
 	old.r = substitute.r
+	return exp
+}
+
+//Subvar - for any occurance of a VAR whose symbol is a key in the given map,
+//substitute the Var with the mapped Expr.
+//Return the result.
+//This operation is non-destructive.
+func (exp *Expr) Subvar(varmap map[rune]*Expr) *Expr {
+	exp = exp.Clone()
+	var rec func(*Expr) *Expr
+	rec = func(sub *Expr) *Expr {
+		if sub.typ == VAR && varmap[sub.sym] != nil {
+			return varmap[sub.sym].Clone()
+		}
+		if sub.typ == OP {
+			sub.l = rec(sub.l)
+			sub.r = rec(sub.r)
+		}
+		return sub
+	}
+	exp = rec(exp)
+
 	return exp
 }

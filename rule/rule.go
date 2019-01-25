@@ -16,18 +16,30 @@ func Newrule(lhs, rhs *expr.Expr) *Rule {
 
 //Applicable - is the rule applicable to the designated sub expression of the give expression.
 func (r *Rule) Applicable(e *expr.Expr, subi int) bool {
-	return r.lhs.Match(e.Subexp(subi))
+	mch, _ := r.lhs.Match(e.Subexp(subi))
+	return mch
 }
 
-func (r *Rule) Apply(e *expr.Expr, subi int) (*expr.Expr, error) {
-	if !r.Applicable(e, subi) {
-		return nil, errors.New("Rule\n%s\nis not applicable to \n%s\n",
-			r, expr.Subexp(subi))
+func (r *Rule) Apply(exp *expr.Expr, subi int) (*expr.Expr, error) {
+	//Associate variables in the rules lhs with subtrees of the sub expression
+	match, varmap := r.lhs.Match(exp.Subexp(subi))
+	if !match {
+		return nil, errors.New("Rule\n" + r.String() +
+			"\nis not applicable to \n" + exp.Subexp(subi).String())
 	}
+	//Make a copy of the expression
+	exp = exp.Clone()
+	//Find the subexpression to which the rule is being applied
 
-	return nil, nil
+	//Make a copy of rhs
+	rhs := r.rhs.Clone()
+	//Replace the variables in the copy of rhs with the associated subtrees
+	rhs = rhs.Subvar(varmap)
+	//Substitute the modified rhs back into the copied expression
+	exp = exp.Substitute(subi, rhs)
+	return exp, nil
 }
 
 func (r *Rule) String() string {
-	return r.lhs.String() + " >> " + r.rhs.String()
+	return r.lhs.String() + " -> " + r.rhs.String()
 }

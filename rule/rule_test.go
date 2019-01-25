@@ -15,7 +15,7 @@ func Test_Applicable(t *testing.T) {
 }
 
 func Test_Apply(t *testing.T) {
-	applyalise(commute(), "(+ a (* b c))", 2, "(+ (* b c) a)", t)
+	applyalise(commute(), "(* a (* b c))", 0, "(* (* b c) a)", t)
 	applyalise(commute(), "(* z E)", 0, "(* E z)", t)
 	applyalise(distrib(), "(& (* (- w e) (+ ($ t r) p)) z)", 1,
 		"(& (+ (* (- w e) ($ t r)) (* (- w e) p)) z)", t)
@@ -69,12 +69,12 @@ func applyalise(r *Rule, expstr string, subi int, desired string, t *testing.T) 
 	if err != nil {
 		t.Fatalf("%s\n%s", desired, err)
 	}
-	res, err := r.Apply(exp)
+	res, err := r.Apply(exp, subi)
 	if err != nil {
 		t.Fatalf("%s", err)
 	}
-	if !exp.Equals(desexp) {
-		t.Errorf("The output to rule\n%s\nshould be\n%s\n but is \n%s\n",
-			r, desexp, res)
+	if !res.Equals(desexp) {
+		t.Errorf("The output to rule\n%s\non\n%s\nat\n%v\nshould be\n%s\n but is \n%s\n",
+			r, exp, subi, desexp, res)
 	}
 }
