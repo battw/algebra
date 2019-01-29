@@ -10,7 +10,7 @@ type Rule struct {
 	rhs *expr.Expr
 }
 
-func Newrule(lhs, rhs *expr.Expr) (*Rule, error) {
+func New(lhs, rhs *expr.Expr) (*Rule, error) {
 	//Test for extra vars on rhs
 	var lvars map[rune]bool = lhs.Vars()
 	for r, b := range rhs.Vars() {

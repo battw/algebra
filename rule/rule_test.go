@@ -89,10 +89,10 @@ func Test_Newrule(t *testing.T) {
 func newts(lhs, rhs string, wanterror bool, t *testing.T, msg string) {
 	lexp, _ := expr.Translate(lhs)
 	rexp, _ := expr.Translate(rhs)
-	_, err := Newrule(lexp, rexp)
+	_, err := New(lexp, rexp)
 	if !wanterror && err != nil {
-		t.Errorf("Newrule(%s, %s)\nshould not return an error (%s)", lexp, rexp, msg)
+		t.Errorf("rule.New(%s, %s)\nshould not return an error (%s)", lexp, rexp, msg)
 	} else if wanterror && err == nil {
-		t.Errorf("Newrule(%s, %s)\nshould return an error (%s)", lexp, rexp, msg)
+		t.Errorf("rule.New(%s, %s)\nshould return an error (%s)", lexp, rexp, msg)
 	}
 }

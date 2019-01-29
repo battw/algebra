@@ -120,38 +120,29 @@ func helper_defexps(defstrs []string, env *environ) {
 //desired and actual string outputs plus the rule name.
 func helper_commuterule(env *environ) (string, string, string) {
 	rname := "commute"
-	antevar := "anekdi"
-	anteexp := "(* a b)"
-	postvar := "pnfken"
+	preexp := "(* a b)"
 	postexp := "(* b a)"
-	helper_defexps([]string{antevar + " " + anteexp, postvar + " " + postexp}, env)
-	rtokch := toknify.Tokenise(util.Runechan(rname + " " + antevar + " " + postvar))
+	rtokch := toknify.Tokenise(util.Runechan(rname + " " + preexp + " " + postexp))
 	outstr := ruledef(rtokch, env)
-	return anteexp + " -> " + postexp, outstr, rname
+	return preexp + " -> " + postexp, outstr, rname
 }
 
 func helper_distribrule(env *environ) (string, string, string) {
 	rname := "distrb"
-	antevar := "kjniso"
-	anteexp := "(* a (+ b c))"
-	postvar := "dnkoek"
-	postexp := "(+ (* a b) (* c d))"
-	helper_defexps([]string{antevar + " " + anteexp, postvar + " " + postexp}, env)
-	rtokch := toknify.Tokenise(util.Runechan(rname + " " + antevar + " " + postvar))
+	preexp := "(* a (+ b c))"
+	postexp := "(+ (* a b) (* a c))"
+	rtokch := toknify.Tokenise(util.Runechan(rname + " " + preexp + " " + postexp))
 	outstr := ruledef(rtokch, env)
-	return anteexp + " -> " + postexp, outstr, rname
+	return preexp + " -> " + postexp, outstr, rname
 }
 
 func helper_undistribrule(env *environ) (string, string, string) {
 	rname := "undistrb"
-	antevar := "nedidi"
-	anteexp := "(* a (+ b c))"
-	postvar := "polesk"
-	postexp := "(+ (* a b) (* c d))"
-	helper_defexps([]string{antevar + " " + anteexp, postvar + " " + postexp}, env)
-	rtokch := toknify.Tokenise(util.Runechan(rname + " " + antevar + " " + postvar))
+	preexp := "(+ (* a b) (* a c))"
+	postexp := "(* a (+ b c))"
+	rtokch := toknify.Tokenise(util.Runechan(rname + " " + preexp + " " + postexp))
 	outstr := ruledef(rtokch, env)
-	return anteexp + " -> " + postexp, outstr, rname
+	return preexp + " -> " + postexp, outstr, rname
 
 }
 
@@ -196,7 +187,7 @@ func Test_applyrule(t *testing.T) {
 	i := "2"
 	helper_defexps([]string{ename + " " + exp}, env)
 	result := helper_applyrule(rname, ename, i, env)
-	if len(result) < 50 {
+	if len(result) == 0 || result[0] != '(' {
 		t.Errorf("Rule application should return an error string " +
 			"as the rule isn't applicable")
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/llo-oll/algebra/expr"
+	"github.com/llo-oll/algebra/rule"
 	"github.com/llo-oll/algebra/toknify"
 	"github.com/llo-oll/algebra/util"
 	"os"
@@ -12,12 +13,14 @@ import (
 )
 
 type environ struct {
-	expmap map[string]*expr.Expr
+	expmap  map[string]*expr.Expr
+	rulemap map[string]*rule.Rule
 }
 
 func newenviron() *environ {
 	expmap := make(map[string]*expr.Expr)
-	env := &environ{expmap}
+	rulemap := make(map[string]*rule.Rule)
+	env := &environ{expmap, rulemap}
 	return env
 }
 
@@ -181,13 +184,45 @@ func printvars(tokch <-chan toknify.Tokn, env *environ) string {
 }
 
 func ruledef(tokch <-chan toknify.Tokn, env *environ) string {
-	//Check vars(lhs) == vars(rhs)
-	return "RULE"
+	desired := [][]toknify.Toktyp{{toknify.NAME, toknify.EXPR, toknify.EXPR}}
+	toks, _, err := paramcheck(desired, tokch)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
+	name := toks[0].Str
+	lhs, err := expr.Translate(toks[1].Str)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
+	rhs, err := expr.Translate(toks[2].Str)
+	r, err := rule.New(lhs, rhs)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
+	env.rulemap[name] = r
+	return r.String()
 }
 
 func applyrule(tokch <-chan toknify.Tokn, env *environ) string {
-	//Check match can be applied on the specified subexpression
-	return "APPLY"
+	desired := [][]toknify.Toktyp{{toknify.NAME, toknify.NAME, toknify.INT}}
+	toks, _, err := paramcheck(desired, tokch)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
+	rule := env.rulemap[toks[0].Str]
+	if rule == nil {
+		return fmt.Sprintf("There is no rule named %s", toks[0].Str)
+	}
+	exp := env.expmap[toks[1].Str]
+	if exp == nil {
+		return fmt.Sprintf("There is no expression named %s", toks[1].Str)
+	}
+	subi, _ := strconv.Atoi(toks[2].Str)
+	result, err := rule.Apply(exp, subi-1)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
+	return result.String()
 }
 func subexpr(tokch <-chan toknify.Tokn, env *environ) string {
 	desired := [][]toknify.Toktyp{{toknify.NAME, toknify.INT}}
