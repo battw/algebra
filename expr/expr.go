@@ -167,3 +167,21 @@ func (exp *Expr) Subvar(varmap map[rune]*Expr) *Expr {
 
 	return exp
 }
+
+//Vars - returns the set of variable symbols from the expression
+func (exp *Expr) Vars() map[rune]bool {
+	symset := make(map[rune]bool)
+	var rec func(*Expr)
+	rec = func(sub *Expr) {
+		if sub.typ == VAR {
+			symset[sub.sym] = true
+			return
+		}
+		if sub.typ == OP {
+			rec(sub.l)
+			rec(sub.r)
+		}
+	}
+	rec(exp)
+	return symset
+}

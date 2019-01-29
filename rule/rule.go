@@ -10,8 +10,15 @@ type Rule struct {
 	rhs *expr.Expr
 }
 
-func Newrule(lhs, rhs *expr.Expr) *Rule {
-	return &Rule{lhs, rhs}
+func Newrule(lhs, rhs *expr.Expr) (*Rule, error) {
+	//Test for extra vars on rhs
+	var lvars map[rune]bool = lhs.Vars()
+	for r, b := range rhs.Vars() {
+		if b && !lvars[r] {
+			return nil, errors.New(string(r) + " is present in rhs but not lhs")
+		}
+	}
+	return &Rule{lhs, rhs}, nil
 }
 
 //Applicable - is the rule applicable to the designated sub expression of the give expression.
