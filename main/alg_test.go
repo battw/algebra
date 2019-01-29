@@ -173,8 +173,8 @@ func Test_ruledef(t *testing.T) {
 
 }
 
-func helper_applyrule(rname string, ename string, i string, env *environ) string {
-	tokch := toknify.Tokenise(util.Runechan(rname + " " + ename + " " + i))
+func helper_applyrule(rname string, ename string, i string, resname string, env *environ) string {
+	tokch := toknify.Tokenise(util.Runechan(rname + " " + ename + " " + i + " " + resname))
 	return applyrule(tokch, env)
 }
 
@@ -186,7 +186,7 @@ func Test_applyrule(t *testing.T) {
 	exp := "(* (* (* a b) c) (* e f))"
 	i := "2"
 	helper_defexps([]string{ename + " " + exp}, env)
-	result := helper_applyrule(rname, ename, i, env)
+	result := helper_applyrule(rname, ename, i, "", env)
 	if len(result) == 0 || result[0] != '(' {
 		t.Errorf("Rule application should return an error string " +
 			"as the rule isn't applicable")
@@ -200,7 +200,7 @@ func Test_applyrule(t *testing.T) {
 	i = "1"
 	desired := "(* (* c d) (* a b))"
 	helper_defexps([]string{ename + " " + exp}, env)
-	result = helper_applyrule(rname, ename, i, env)
+	result = helper_applyrule(rname, ename, i, "", env)
 	if desired != result {
 		t.Errorf("The result of apply commutative rule at %v is\n%s\n"+
 			"It should be \n%s\n", i, result, desired)
@@ -213,7 +213,7 @@ func Test_applyrule(t *testing.T) {
 	i = "2"
 	desired = "(* (* c (* a b)) (* e f))"
 	helper_defexps([]string{ename + " " + exp}, env)
-	result = helper_applyrule(rname, ename, i, env)
+	result = helper_applyrule(rname, ename, i, "", env)
 	if desired != result {
 		t.Errorf("The result of apply commutative rule at %v is\n%s\n"+
 			"It should be \n%s\n", i, result, desired)
@@ -226,7 +226,7 @@ func Test_applyrule(t *testing.T) {
 	i = "1"
 	desired = "(+ (* a (+ c d)) (* a e))"
 	helper_defexps([]string{ename + " " + exp}, env)
-	result = helper_applyrule(rname, ename, i, env)
+	result = helper_applyrule(rname, ename, i, "", env)
 	if desired != result {
 		t.Errorf("The result of apply distributive rule at %v is\n%s\n"+
 			"It should be \n%s\n", i, result, desired)
@@ -238,10 +238,16 @@ func Test_applyrule(t *testing.T) {
 	exp = "(+ (* a (+ c d)) (* a e))"
 	i = "1"
 	desired = "(* a (+ (+ c d) e))"
+	resultname := "res"
 	helper_defexps([]string{ename + " " + exp}, env)
-	result = helper_applyrule(rname, ename, i, env)
+	result = helper_applyrule(rname, ename, i, resultname, env)
 	if desired != result {
 		t.Errorf("The result of apply undistributive rule at %v is\n%s\n"+
 			"It should be \n%s\n", i, result, desired)
+	}
+	if env.expmap[resultname] == nil {
+		t.Error("Failed to store the result of a rule application")
+	} else if env.expmap[resultname].String() != desired {
+		t.Error("Rule result stored incorrectly")
 	}
 }

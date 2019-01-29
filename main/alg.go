@@ -204,8 +204,11 @@ func ruledef(tokch <-chan toknify.Tokn, env *environ) string {
 }
 
 func applyrule(tokch <-chan toknify.Tokn, env *environ) string {
-	desired := [][]toknify.Toktyp{{toknify.NAME, toknify.NAME, toknify.INT}}
-	toks, _, err := paramcheck(desired, tokch)
+	desired := [][]toknify.Toktyp{
+		{toknify.NAME, toknify.NAME, toknify.INT},
+		{toknify.NAME, toknify.NAME, toknify.INT, toknify.NAME}}
+	toks, i, err := paramcheck(desired, tokch)
+	storeresult := i == 1
 	if err != nil {
 		return fmt.Sprintf("%s", err)
 	}
@@ -222,8 +225,12 @@ func applyrule(tokch <-chan toknify.Tokn, env *environ) string {
 	if err != nil {
 		return fmt.Sprintf("%s", err)
 	}
+	if storeresult {
+		env.expmap[toks[3].Str] = result
+	}
 	return result.String()
 }
+
 func subexpr(tokch <-chan toknify.Tokn, env *environ) string {
 	desired := [][]toknify.Toktyp{{toknify.NAME, toknify.INT}}
 	toks, _, err := paramcheck(desired, tokch)
@@ -235,7 +242,7 @@ func subexpr(tokch <-chan toknify.Tokn, env *environ) string {
 		return "There is no expression named " + toks[0].Str
 	}
 	subi, _ := strconv.Atoi(toks[1].Str)
-	return exp.Subexp(subi - 1).String() // -1 so counting from 1 up rather than 0
+	return exp.Subexp(subi - 1).String() // -1 so counting from 1 rather than 0
 }
 
 //TODO Index out of bounds error
