@@ -18,10 +18,14 @@ type environ struct {
 }
 
 func newenviron() *environ {
-	expmap := make(map[string]*expr.Expr)
-	rulemap := make(map[string]*rule.Rule)
-	env := &environ{expmap, rulemap}
+	env := &environ{}
+	env.init()
 	return env
+}
+
+func (env *environ) init() {
+	env.expmap = make(map[string]*expr.Expr)
+	env.rulemap = make(map[string]*rule.Rule)
 }
 
 func main() {
@@ -76,6 +80,9 @@ func handle(input string, env *environ) string {
 		return subexpr(tokch, env)
 	case "sbs":
 		return substitute(tokch, env)
+	case "clear":
+		env.init()
+		return ""
 	case "":
 		return ""
 	default:
@@ -180,7 +187,12 @@ func printvars(tokch <-chan toknify.Tokn, env *environ) string {
 	for k, exp := range env.expmap {
 		str += k + ": " + exp.String() + "\n"
 	}
-	return str[:len(str)-1]
+	//remove final \n
+	if len(str) > 0 {
+		return str[:len(str)-1]
+	} else {
+		return ""
+	}
 }
 
 func ruledef(tokch <-chan toknify.Tokn, env *environ) string {
