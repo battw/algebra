@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/llo-oll/algebra/expr"
+	"github.com/llo-oll/algebra/file"
 	"github.com/llo-oll/algebra/rule"
 	"github.com/llo-oll/algebra/toknify"
 	"github.com/llo-oll/algebra/util"
@@ -30,22 +31,41 @@ func (env *environ) init() {
 
 func main() {
 	engin, engout := eng()
+	if len(os.Args) > 1 {
+		file.Read(os.Args[1], engin)
+	}
 	repl(engin, engout)
 }
 
 func repl(engin chan<- string, engout <-chan string) {
-	bio := bufio.NewReader(os.Stdin)
+	var userch <-chan string = userinch()
 	for {
-		//read
-		line, _ := bio.ReadString('\n')
-		//execute
-		engin <- line
-		//print
-		str := <-engout
-		if len(str) > 0 {
-			fmt.Println(str)
+		select {
+		case userin := <-userch:
+			//execute
+			engin <- userin
+			//print
+		case outstr := <-engout:
+			if len(outstr) > 0 {
+				fmt.Println(outstr)
+			}
 		}
 	}
+}
+
+func userinch() <-chan string {
+	bio := bufio.NewReader(os.Stdin)
+	userch := make(chan string)
+	go func() {
+		for {
+			line, err := bio.ReadString('\n')
+			if err != nil {
+				return
+			}
+			userch <- line
+		}
+	}()
+	return userch
 }
 
 //eng is the algebra engine.
