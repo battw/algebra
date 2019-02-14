@@ -1,7 +1,7 @@
 package rule
 
 import (
-	"github.com/llo-oll/algebra/expr"
+	"github.com/battw/algebra/expr"
 	"testing"
 )
 

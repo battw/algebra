@@ -2,7 +2,7 @@ package rule
 
 import (
 	"errors"
-	"github.com/llo-oll/algebra/expr"
+	"github.com/battw/algebra/expr"
 )
 
 type Rule struct {

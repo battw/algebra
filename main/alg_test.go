@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/llo-oll/algebra/toknify"
-	"github.com/llo-oll/algebra/util"
+	"github.com/battw/algebra/toknify"
+	"github.com/battw/algebra/util"
 	"testing"
 )
 

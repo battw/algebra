@@ -2,7 +2,7 @@ package expr
 
 import (
 	"errors"
-	"github.com/llo-oll/algebra/util"
+	"github.com/battw/algebra/util"
 	"strconv"
 	"unicode"
 )
