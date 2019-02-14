@@ -5,15 +5,15 @@ import (
 )
 
 func Test_Substitute(t *testing.T) {
-	str := "(+ a (* c d))"
-	substr := "(+ (%x y) z)"
+	str := "(+ a (* 2 3))"
+	substr := "(+ (% x y) 1)"
 	exp, _ := Translate(str)
 	subexp, _ := Translate(substr)
 	result := exp.Substitute(3, subexp)
 	if str != exp.String() {
 		t.Fatal("exp.Substitute mutates its input")
 	}
-	desired := "(+ a (* (+ (% x y) z) d))"
+	desired := "(+ a (* (+ (% x y) 1) 3))"
 	if result.String() != desired {
 		t.Fatalf("exp.Substitute failed.\n Got %s\n should be %s\n",
 			result.String(), desired)
@@ -21,7 +21,7 @@ func Test_Substitute(t *testing.T) {
 }
 
 func Test_Subexp(t *testing.T) {
-	str := "(+ ($ (% T Q) R) W)"
+	str := "(+ ($ (% T 1) R) W)"
 	subi := 2
 	exp, _ := Translate(str)
 	sub := exp.Subexp(subi)
@@ -31,7 +31,7 @@ func Test_Subexp(t *testing.T) {
 		t.Fatalf("exp.Subexp() mutates its input")
 	}
 	//  it returns the correct result
-	desired := "(% T Q)"
+	desired := "(% T 1)"
 	if sub.String() != desired {
 		t.Fatalf("exp.Subexp() failed.\n Got %s\n should be %s\n",
 			sub.String(), desired)
@@ -39,8 +39,8 @@ func Test_Subexp(t *testing.T) {
 }
 
 func Test_Equals(t *testing.T) {
-	exp1, _ := Translate("(& (+ (& a b) (* r (^ x Y))) (+ o (- r G)))")
-	exp2, _ := Translate("(& (+ (& a b) (* r (^ x Y))) (+ o (- r G)))")
+	exp1, _ := Translate("(& (+ (& a 1) (* r (^ x Y))) (+ o (- r G)))")
+	exp2, _ := Translate("(& (+ (& a 1) (* r (^ x Y))) (+ o (- r G)))")
 	//Basic equals
 	if !exp1.Equals(exp2) {
 		t.Errorf("\n%s\n%s\nshould evaluate as Equal", exp1, exp2)
@@ -92,15 +92,21 @@ func Test_Match(t *testing.T) {
 	if mch, _ := sub.Match(sup); mch {
 		t.Errorf("\n%s\n%s\nshouldn't 'Match'", sub, sup)
 	}
+	sub, _ = Translate("(+ a 1)")
+	sup, _ = Translate("(+ (* x y) (* x y))")
+	//Repeated vars left
+	if mch, _ := sub.Match(sup); mch {
+		t.Errorf("\n%s\n%s\nshouldn't 'Match'", sub, sup)
+	}
 
 }
 
 func Test_Subvar(t *testing.T) {
 	m := make(map[rune]*Expr)
 	m['a'], _ = Translate("(+ a a)")
-	m['b'], _ = Translate("(* (- b b) b)")
-	exp, _ := Translate("(- (* a b) ($ b z))")
-	desired, _ := Translate("(- (* (+ a a) (* (- b b) b)) ($ (* (- b b) b) z))")
+	m['b'], _ = Translate("(* (- 4 b) b)")
+	exp, _ := Translate("(- (* a b) ($ b (& z 1))")
+	desired, _ := Translate("(- (* (+ a a) (* (- 4 b) b)) ($ (* (- 4 b) b) (& z 1)))")
 	result := exp.Subvar(m)
 	if !desired.Equals(result) {
 		t.Errorf("\n%s\nShould equal\n%s\n", result, desired)

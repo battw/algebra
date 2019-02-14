@@ -9,6 +9,8 @@ func TestSimpleParse(t *testing.T) {
 		"(+ a b)",
 		"(+ (+ a b) c)",
 		"(* (- (+ a b) ($ a f)) (# f A))",
+		"(* 1 x)",
+		"(& r (- 1 3))",
 	}
 
 	for i, s := range exprs {

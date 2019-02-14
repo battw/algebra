@@ -27,6 +27,7 @@ const (
 	ERR_ITEM
 	OP_ITEM
 	VAR_ITEM
+	NUM_ITEM
 	LBRAK_ITEM
 	RBRAK_ITEM
 )
@@ -46,6 +47,10 @@ func isVar(r rune) bool {
 	return unicode.IsLetter(r)
 }
 
+func isNum(r rune) bool {
+	return unicode.IsNumber(r)
+}
+
 func lex(rch <-chan rune) <-chan item {
 	ich := make(chan item)
 	go func() {
@@ -58,6 +63,8 @@ func lex(rch <-chan rune) <-chan item {
 				ich <- item{OP_ITEM, r, nil}
 			case isVar(r):
 				ich <- item{VAR_ITEM, r, nil}
+			case isNum(r):
+				ich <- item{NUM_ITEM, r, nil}
 			default:
 				ich <- item{
 					ERR_ITEM,
@@ -97,6 +104,8 @@ func parserec(ich <-chan item, subi int) (*Expr, error, int) {
 		return &Expr{OP, i.sym, l, r}, nil, subi
 	case VAR_ITEM:
 		return &Expr{VAR, i.sym, nil, nil}, nil, subi
+	case NUM_ITEM:
+		return &Expr{NUM, i.sym, nil, nil}, nil, subi
 	case ERR_ITEM:
 		return nil,
 			i.err,

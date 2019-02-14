@@ -6,6 +6,7 @@ const (
 	ERR nodetype = iota
 	OP
 	VAR
+	NUM
 )
 
 func (nt nodetype) String() string {
@@ -16,6 +17,8 @@ func (nt nodetype) String() string {
 		return "OP "
 	case VAR:
 		return "VAR"
+	case NUM:
+		return "NUM"
 	default:
 		return "INVALID"
 	}
@@ -34,7 +37,7 @@ func (exp Expr) String() string {
 	case OP:
 		return "(" + string(exp.sym) + " " + exp.l.String() + " " +
 			exp.r.String() + ")"
-	case VAR:
+	case VAR, NUM:
 		return string(exp.sym)
 	default:
 		return "ERR: " + string(exp.sym)
@@ -44,7 +47,7 @@ func (exp Expr) String() string {
 //Equals - Expression equality: same shape, operations and variables.
 func (exp *Expr) Equals(other *Expr) bool {
 	if exp.typ == other.typ && exp.sym == other.sym {
-		if exp.typ == VAR {
+		if exp.typ == VAR || exp.typ == NUM {
 			return true
 		} else if exp.typ == OP {
 			return exp.l.Equals(other.l) && exp.r.Equals(other.r)
@@ -91,6 +94,9 @@ func (sub *Expr) matchrec(sup *Expr, var2exps map[rune][]*Expr) bool {
 	if sup.typ == VAR {
 		return false
 	}
+	if sub.typ == NUM && sup.typ == NUM && sub.sym == sup.sym {
+		return true
+	}
 	if sub.typ == OP && sup.typ == OP && sub.sym == sup.sym {
 		return sub.l.matchrec(sup.l, var2exps) && sub.r.matchrec(sup.r, var2exps)
 	}
@@ -111,7 +117,7 @@ func (exp *Expr) subrec(i int) (*Expr, int) {
 		return exp, -1
 	}
 
-	if exp.typ == VAR {
+	if exp.typ == VAR || exp.typ == NUM {
 		return nil, i
 	}
 	sub, i := exp.l.subrec(i - 1)
@@ -125,10 +131,11 @@ func (exp *Expr) subrec(i int) (*Expr, int) {
 //TODO return an error rather than badly formed tree
 func (exp *Expr) Clone() *Expr {
 	switch exp.typ {
-	case VAR:
+	case VAR, NUM:
 		return &Expr{exp.typ, exp.sym, nil, nil}
 	case OP:
 		return &Expr{exp.typ, exp.sym, exp.l.Clone(), exp.r.Clone()}
+
 	default:
 		return &Expr{ERR, 949, nil, nil}
 	}
