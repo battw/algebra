@@ -92,10 +92,14 @@ func handle(input string, env *environ) string {
 		return printexp(tokch, env)
 	case "pv", "printvars":
 		return printvars(tokch, env)
+	case "pr", "printrules":
+		return printrules(tokch, env)
 	case "r", "rule":
 		return ruledef(tokch, env)
 	case "a", "apply":
 		return applyrule(tokch, env)
+	case "i", "intro":
+		return applyintro(tokch, env)
 	case "s", "sub":
 		return subexpr(tokch, env)
 	case "sbs":
@@ -215,6 +219,19 @@ func printvars(tokch <-chan toknify.Tokn, env *environ) string {
 	}
 }
 
+func printrules(tokch <-chan toknify.Tokn, env *environ) string {
+	str := ""
+	for k, rule := range env.rulemap {
+		str += k + ": " + rule.String() + "\n"
+	}
+	//remove final \n
+	if len(str) > 0 {
+		return str[:len(str)-1]
+	} else {
+		return ""
+	}
+}
+
 func ruledef(tokch <-chan toknify.Tokn, env *environ) string {
 	desired := [][]toknify.Toktyp{{toknify.NAME, toknify.EXPR, toknify.EXPR}}
 	toks, _, err := paramcheck(desired, tokch)
@@ -259,6 +276,39 @@ func applyrule(tokch <-chan toknify.Tokn, env *environ) string {
 	}
 	if storeresult {
 		env.expmap[toks[3].Str] = result
+	}
+	return result.String()
+}
+
+func applyintro(tokch <-chan toknify.Tokn, env *environ) string {
+	desired := [][]toknify.Toktyp{
+		{toknify.NAME, toknify.NAME, toknify.INT, toknify.NAME},
+		{toknify.NAME, toknify.NAME, toknify.INT, toknify.NAME, toknify.NAME}}
+
+	toks, i, err := paramcheck(desired, tokch)
+	storeresult := i == 1
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
+	rule := env.rulemap[toks[0].Str]
+	if rule == nil {
+		return fmt.Sprintf("There is no rule named %s", toks[0].Str)
+	}
+	exp := env.expmap[toks[1].Str]
+	if exp == nil {
+		return fmt.Sprintf("There is no expression named %s", toks[1].Str)
+	}
+	introexp := env.expmap[toks[3].Str]
+	if exp == nil {
+		return fmt.Sprintf("There is no expression named %s to introduce", toks[3].Str)
+	}
+	subi, _ := strconv.Atoi(toks[2].Str)
+	result, err := rule.Apply(exp, subi-1, introexp)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
+	if storeresult {
+		env.expmap[toks[4].Str] = result
 	}
 	return result.String()
 }

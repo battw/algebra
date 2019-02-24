@@ -1,15 +1,26 @@
 r mcom (* a b) (* b a)
+
 r mass1 (* a (* b c)) (* (* a b) c)
 r mass2 (* (* a b) c) (* a (* b c))
+
 r mid (* a 1) (a)
+r mdi (a) (* a 1)
+
 r minv (* a (/ 1 a)) (1) 
+r mvni (1) (* a (/ 1 a))
+
 
 r acom (+ a b) (+ b a)
+
 r aass1 (+ a (+ b c)) (+ (+ a b) c)
 r aass2 (+ (+ a b) c) (+ a (+ b c))
+
 r aid (+ a 0) (a)
+r adi (a) (+ a 0)
+
 r ainv (+ a (- 0 a)) (0)
+r avni (0) (+ a (- 0 a))
 
 r dist (* a (+ b c)) (+ (* a b) (* a c))
-r undist (+ (* a b) (* a c)) (* a (+ b c))
+r tisd  (+ (* a b) (* a c)) (* a (+ b c))
 

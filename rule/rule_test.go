@@ -92,7 +92,57 @@ func newts(lhs, rhs string, wanterror bool, t *testing.T, msg string) {
 	_, err := New(lexp, rexp)
 	if !wanterror && err != nil {
 		t.Errorf("rule.New(%s, %s)\nshould not return an error (%s)", lexp, rexp, msg)
-	} else if wanterror && err == nil {
-		t.Errorf("rule.New(%s, %s)\nshould return an error (%s)", lexp, rexp, msg)
 	}
+}
+
+func Test_Introrule(t *testing.T) {
+	exp, err := expr.Translate("(* p (+ (& i j) (* e f)))")
+	lhs, err1 := expr.Translate("(+ x y)")
+	rhs, err2 := expr.Translate("(* x (* y z))")
+	iexp, err3 := expr.Translate("(+ a b)")
+	if err != nil || err1 != nil || err2 != nil || err3 != nil {
+		t.Fatal("Expressions should translate")
+	}
+	r, err := New(lhs, rhs)
+	if err != nil {
+		t.Fatal("Rule should instantiate")
+	}
+	//A rule including an introduction of a subexp should give an error when
+	//no sub exp is provided.
+	_, err = r.Apply(exp, 1)
+	if err == nil {
+		t.Fatalf("Application of rule\n%s\nshould give an error when there "+
+			"expression provided to introduce", r)
+	}
+	//A rule with introduction should give correct results when given good input.
+	result, err := r.Apply(exp, 2, iexp)
+	if err != nil {
+		t.Fatalf("Rule application of\n%s\nshouldn't throw an error\n%s.", r, err)
+	}
+	desired, err := expr.Translate("(* p (* (& i j) (* (* e f) (+ a b))))")
+	if err != nil {
+		t.Fatalf("Rule should instantiate")
+	}
+	if !result.Equals(desired) {
+		t.Errorf("result\n%s\nshould be \n%s\n", result, desired)
+	}
+}
+
+func Test_introductions(t *testing.T) {
+	lexp, err1 := expr.Translate("(+ x y)")
+	rexp, err2 := expr.Translate("(* x (* y z))")
+	if err1 != nil || err2 != nil {
+		t.Fatalf("Expressions should translate")
+	}
+	r, err := New(lexp, rexp)
+	if err != nil {
+		t.Fatalf("Rule should instantiate")
+	}
+	intros := r.introductions()
+	if len(intros) == 0 {
+		t.Errorf("Rule\n%s\nintroduces a variable", r)
+	} else if intros[0] != 'z' {
+		t.Errorf("Rule\n%s\nintroduces '%c' it should introduce 'z'", r, intros[0])
+	}
+
 }
