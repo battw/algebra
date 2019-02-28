@@ -190,7 +190,7 @@ func exprdef(tokch <-chan toknify.Tokn, env *environ) string {
 	}
 	//add to the environment
 	env.expmap[toks[0].Str] = exp
-	return exp.String()
+	return expr.Pretty(exp)
 }
 
 func printexp(tokch <-chan toknify.Tokn, env *environ) string {
@@ -203,13 +203,13 @@ func printexp(tokch <-chan toknify.Tokn, env *environ) string {
 	if exp == nil {
 		return "There is no expression named " + toks[0].Str
 	}
-	return exp.String()
+	return expr.Pretty(exp)
 }
 
 func printvars(tokch <-chan toknify.Tokn, env *environ) string {
 	str := ""
 	for k, exp := range env.expmap {
-		str += k + ": " + exp.String() + "\n"
+		str += k + ": " + expr.Pretty(exp) + "\n"
 	}
 	//remove final \n
 	if len(str) > 0 {
@@ -221,8 +221,8 @@ func printvars(tokch <-chan toknify.Tokn, env *environ) string {
 
 func printrules(tokch <-chan toknify.Tokn, env *environ) string {
 	str := ""
-	for k, rule := range env.rulemap {
-		str += k + ": " + rule.String() + "\n"
+	for k, rl := range env.rulemap {
+		str += k + ":\n" + rule.Pretty(rl)
 	}
 	//remove final \n
 	if len(str) > 0 {
@@ -249,7 +249,7 @@ func ruledef(tokch <-chan toknify.Tokn, env *environ) string {
 		return fmt.Sprintf("%s", err)
 	}
 	env.rulemap[name] = r
-	return r.String()
+	return rule.Pretty(r)
 }
 
 func applyrule(tokch <-chan toknify.Tokn, env *environ) string {

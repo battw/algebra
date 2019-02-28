@@ -146,3 +146,20 @@ func Test_introductions(t *testing.T) {
 	}
 
 }
+
+func Test_Pretty(t *testing.T) {
+	lhs, err := expr.Translate("(+ a (/ (+ (/ b c) (/ (+ d e) f)) (/ (/ g h) i)))")
+	if err != nil {
+		t.Fatalf("should translate")
+	}
+	rhs, err := expr.Translate("(/ (/ (+ a b) c) (/ d (* e f)))")
+	if err != nil {
+		t.Fatalf("should translate")
+	}
+	rule1, _ := New(lhs, rhs)
+	t.Error(Pretty(rule1))
+
+	rule2, _ := New(rhs, lhs)
+	t.Error(Pretty(rule2))
+
+}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/battw/algebra/expr"
 	"strconv"
+	"strings"
 )
 
 type Rule struct {
@@ -11,6 +12,7 @@ type Rule struct {
 	rhs *expr.Expr
 }
 
+//TODO remove the error as it is never returned
 func New(lhs, rhs *expr.Expr) (*Rule, error) {
 	//Test for extra vars on rhs
 	return &Rule{lhs, rhs}, nil
@@ -52,6 +54,66 @@ func (r *Rule) String() string {
 	return r.lhs.String() + " -> " + r.rhs.String()
 }
 
+func Pretty(r *Rule) string {
+	lstr := expr.Pretty(r.lhs)
+	rstr := expr.Pretty(r.rhs)
+	llines := strings.Split(lstr, "\n")
+	rlines := strings.Split(rstr, "\n")
+	//remove empty lines
+	for i := 0; i < len(llines); i++ {
+		if len(llines[i]) == 0 {
+			llines = append(llines[:i], llines[i+1:]...)
+		}
+	}
+	for i := 0; i < len(rlines); i++ {
+		if len(rlines[i]) == 0 {
+			rlines = append(rlines[:i], rlines[i+1:]...)
+		}
+	}
+
+	height := max(len(llines), len(rlines))
+	diff := len(llines) - len(rlines)
+	var small []string
+	if diff < 0 {
+		small = llines
+	} else if diff > 0 {
+		small = rlines
+	}
+	//Pad the smaller of the two expressions so that they are both the same height
+	if small != nil {
+		front := true // padding line at beginning insert
+		for i := 0; i < abs(diff); i++ {
+			line := strings.Repeat(" ", len(small[0]))
+			front = !front
+			if front {
+				small = append([]string{line}, small...)
+			} else {
+				small = append(small, line)
+			}
+		}
+	}
+	if diff < 0 {
+		llines = small
+	} else if diff > 0 {
+		rlines = small
+	}
+	//Create an arrow and the space around it to put between the two expressions
+	arrow := make([]string, height)
+	for i, _ := range arrow {
+		if i == height/2 {
+			arrow[i] = "  =>  "
+		} else {
+			arrow[i] = "      "
+		}
+	}
+	pretty := ""
+	for i := 0; i < height; i++ {
+		pretty += llines[i] + arrow[i] + rlines[i] + "\n"
+	}
+
+	return pretty
+}
+
 //introsvar - If the rule introduces new subexpressions, return the variable symbol
 //representing those subexpressions.
 //Otherwise return an empty slice.
@@ -64,4 +126,19 @@ func (r *Rule) introductions() []rune {
 		}
 	}
 	return syms
+}
+
+func max(x, y int) int {
+	if x > y {
+		return x
+	} else {
+		return y
+	}
+}
+
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
 }
