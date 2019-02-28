@@ -9,21 +9,21 @@ I'm using it to get some idea of the desirable qualities of a language for algeb
    Adding a file as an argument will read any of its instructions into the interpreter.
 
 ** Use
-   Define an expression (+ (* x y) z) named a:
+   Define an expression (+ (* x y) z) named f:
    #+BEGIN_SRC
-     e[xpr] a (+ (* x y) z)
+     e[xpr] f (+ (* x y) z)
    #+END_SRC
    Define a rule named com which transforms an expression from the form (+ a b) to (+ b a).
    #+BEGIN_SRC
      r[ule] com (+ a b) (+ b a)
    #+END_SRC
-   Apply com to the expression a at its root (index 1) and store the result in b.
+   Apply com to the expression f at its root (index 1) and store the result in g.
    This requires that the expression matches the form of the left hand side of the rule
    e.g. (+ a b) where a and b are any well formed expression.
    #+BEGIN_SRC
-     a[pply] com a 1 b
+     a[pply] com f 1 g
    #+END_SRC
-   b will be (+ z (* x y)).
+   g will be (+ z (* x y)).
 
 ** Tasks
    - Make the rules print in some sane order
@@ -44,7 +44,11 @@ I'm using it to get some idea of the desirable qualities of a language for algeb
      - What about when multiple matches occur within a single set of combined rules?
        - The interpreter has no way of knowing which one it should apply.
        - Should there be a mechanism to prevent these kinds of definitions?
-     
+   - Storing of results without the need to specify a variable name
+   - Automatic application of rules on the previous result#
+   - Navigation within trees of expressions
+     - Nodes being expressions
+     - Edges being rule applications
 
  
 
