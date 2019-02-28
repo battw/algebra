@@ -252,6 +252,7 @@ func ruledef(tokch <-chan toknify.Tokn, env *environ) string {
 	return rule.Pretty(r)
 }
 
+//TODO restrict the subexpression indexes to valid values.
 func applyrule(tokch <-chan toknify.Tokn, env *environ) string {
 	desired := [][]toknify.Toktyp{
 		{toknify.NAME, toknify.NAME, toknify.INT},
