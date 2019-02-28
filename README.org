@@ -1,6 +1,6 @@
 * Rule Rewriter
-This is a simple computer algebra system based on user rewrite rules.
-
+This is a prototype of a simple computer algebra system based on user rewrite rules.
+I'm using it to get some idea of the desirable qualities of a language for algebra.
 
 ** Run
    #+BEGIN_SRC shell
@@ -10,18 +10,20 @@ This is a simple computer algebra system based on user rewrite rules.
 
 ** Use
    Define an expression (+ (* x y) z) named a:
-   #+BEGIN_SRC shell
+   #+BEGIN_SRC
      e[xpr] a (+ (* x y) z)
    #+END_SRC
-   Define a rule named com which transforms an expression of the for (+ a b) to (+ b a).
-   #+BEGIN_SRC shell
+   Define a rule named com which transforms an expression from the form (+ a b) to (+ b a).
+   #+BEGIN_SRC
      r[ule] com (+ a b) (+ b a)
    #+END_SRC
-   Apply the rule "com" to the expression "a" at its root (index 1) and store the result in "b"
-   #+BEGIN_SRC shell
+   Apply com to the expression a at its root (index 1) and store the result in b.
+   This requires that the expression matches the form of the left hand side of the rule
+   e.g. (+ a b) where a and b are any well formed expression.
+   #+BEGIN_SRC
      a[pply] com a 1 b
    #+END_SRC
-   This will return (+ z (* x y)).
+   b will be (+ z (* x y)).
 
 ** Tasks
    - Make the rules print in some sane order
@@ -34,7 +36,15 @@ This is a simple computer algebra system based on user rewrite rules.
      with them remaining in the context of the larger formula.
      - Currently, it is difficult to select a sub formula as we need to manually count
        all the symbols in order to find the correct index.
- 
+   - Being able to combine more than one rule so that a single operation could be given a
+     single name
+     - e.g. associativity currently requires two rules (+ a (+ b c)) => (+ (+ a b) c)) and its reverse.
+       These could be combined into a single rule with the interpreter choosing the appropriate
+       one to apply. 
+     - What about when multiple matches occur within a single set of combined rules?
+       - The interpreter has no way of knowing which one it should apply.
+       - Should there be a mechanism to prevent these kinds of definitions?
+     
 
  
 
