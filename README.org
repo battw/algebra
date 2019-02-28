@@ -17,14 +17,13 @@ This is a simple computer algebra system based on user rewrite rules.
    #+BEGIN_SRC shell
      r[ule] com (+ a b) (+ b a)
    #+END_SRC
-   Apply the rule com to (+ x y) at its root (index 1) and store the result in b
+   Apply the rule "com" to the expression "a" at its root (index 1) and store the result in "b"
    #+BEGIN_SRC shell
      a[pply] com a 1 b
    #+END_SRC
    This will return (+ z (* x y)).
 
-
-** TODO
+** Tasks
    - Make the rules print in some sane order
    - Return errors when indexing subexpression out of bounds
    - Refactor elementary algegra pretty printer into sub package
