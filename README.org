@@ -1,1 +1,41 @@
-* 
+* Rule Rewriter
+This is a simple computer algebra system based on user rewrite rules.
+
+
+** Run
+   #+BEGIN_SRC shell
+     go run main/alg.go [file]
+   #+END_SRC
+   Adding a file as an argument will read any of its instructions into the interpreter.
+
+** Use
+   Define an expression (+ (* x y) z) named a:
+   #+BEGIN_SRC shell
+     e[xpr] a (+ (* x y) z)
+   #+END_SRC
+   Define a rule named com which transforms an expression of the for (+ a b) to (+ b a).
+   #+BEGIN_SRC shell
+     r[ule] com (+ a b) (+ b a)
+   #+END_SRC
+   Apply the rule com to (+ x y) at its root (index 1) and store the result in b
+   #+BEGIN_SRC shell
+     a[pply] com a 1 b
+   #+END_SRC
+   This will return (+ z (* x y)).
+
+
+** TODO
+   - Make the rules print in some sane order
+   - Return errors when indexing subexpression out of bounds
+   - Refactor elementary algegra pretty printer into sub package
+   - Allow easy switching between printing styles
+
+** Improvements
+   - A way of easily selecting sub formulas and operating on them for a while,
+     with them remaining in the context of the larger formula.
+     - Currently, it is difficult to select a sub formula as we need to manually count
+       all the symbols in order to find the correct index.
+ 
+
+ 
+
